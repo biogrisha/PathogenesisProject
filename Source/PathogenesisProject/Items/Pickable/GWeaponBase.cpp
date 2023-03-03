@@ -31,7 +31,8 @@ void AGWeaponBase::InitPropertiesFromDataAsset(UGGunDataAsset* Asset)
 		WeaponDamage = DataAsset->WeaponDamage;
 		WeaponAmmoType = DataAsset->WeaponAmmoType;
 	}
-	
+	bIsAssetLoaded = true;
+
 }
 
 int32 AGWeaponBase::Reload(int32 CurrentAmmo)
@@ -41,12 +42,22 @@ int32 AGWeaponBase::Reload(int32 CurrentAmmo)
 	CurrentAmmo = FMath::Max(CurrentAmmo-MagazineCapacity,0);
 	CurrentMagazine = bCurrentAmmoEnough*MagazineCapacity +
 					(!bCurrentAmmoEnough)*CurrentAmmoTemp;
+	if(AmmoUpdated.IsBound())
+	{
+		AmmoUpdated.Broadcast(CurrentMagazine);
+		
+	}
 	return CurrentAmmo;
 }
 
 void AGWeaponBase::SetCurrentMagazine(int32 Num)
 {
 	CurrentMagazine = FMath::Clamp(Num,0, MagazineCapacity);
+	if(AmmoUpdated.IsBound())
+	{
+		AmmoUpdated.Broadcast(CurrentMagazine);
+		
+	}
 }
 
 UGInventoryItemBase* AGWeaponBase::GetItemInventoryData_Implementation(UObject* Outer)
@@ -73,13 +84,19 @@ void AGWeaponBase::UpdateItemInventoryData_Implementation()
 void AGWeaponBase::InitFromItemData_Implementation(UGInventoryItemBase* Data)
 {
 	ItemInventoryData = Cast<UGInventoryItemMainWeapon>(Data);
-	auto Asset = Cast<UGGunDataAsset>(ItemInventoryData->GetDataAsset());
-	InitPropertiesFromDataAsset(Asset);
-	
-	CurrentMagazine = ItemInventoryData->GetAmmoInMagazine();
-
 	if(ItemInventoryData)
 	{
+		auto Asset = Cast<UGGunDataAsset>(ItemInventoryData->GetDataAsset());
+		InitPropertiesFromDataAsset(Asset);
+		
+		CurrentMagazine = ItemInventoryData->GetAmmoInMagazine();
+
+		if(AmmoUpdated.IsBound())
+		{
+			AmmoUpdated.Broadcast(CurrentMagazine);
+		
+		}
+	
 		InitFromItemDataBP(Data);
 	}
 }
@@ -94,6 +111,12 @@ void AGWeaponBase::UnloadAssets_Implementation()
 		Manager->UnloadPrimaryAsset(DataAsset->GetPrimaryAssetId());
 		DataAsset.Reset();
 	}
+	bIsAssetLoaded = false;
+}
+
+bool AGWeaponBase::IsLoaded_Implementation()
+{
+	return bIsAssetLoaded;
 }
 
 void AGWeaponBase::UnloadAssetsBP_Implementation()

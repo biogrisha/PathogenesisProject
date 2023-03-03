@@ -9,7 +9,8 @@
 #include "GWeaponBase.generated.h"
 
 UDELEGATE(BlueprintAuthorityOnly)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMyEvent, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAmmoUpdated, int32, Ammo);
+
 
 UCLASS()
 class PATHOGENESISPROJECT_API AGWeaponBase : public AGPickableBase,public IGStorable
@@ -59,7 +60,7 @@ public:
 	virtual void InitFromItemData_Implementation(UGInventoryItemBase* Data)override;
 	
 	virtual void UnloadAssets_Implementation()override;
-
+	virtual bool IsLoaded_Implementation() override;
 protected:
 	//Auxiliary function to load assets in BP 
 	UFUNCTION(BlueprintNativeEvent)
@@ -74,4 +75,10 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite,EditAnywhere)
 	bool bIsShooting;
+
+	bool bIsAssetLoaded = false;
+
+	UPROPERTY(BlueprintAssignable)
+	FAmmoUpdated AmmoUpdated;
+	
 };

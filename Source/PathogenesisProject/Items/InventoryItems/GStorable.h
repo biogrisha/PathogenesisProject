@@ -46,4 +46,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void UnloadAssets();
 
+	UFUNCTION(BlueprintCallable,BlueprintNativeEvent)
+	bool IsLoaded();
+
+private:
+	
 };
